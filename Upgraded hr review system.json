@@ -1,0 +1,343 @@
+{
+  "name": "My workflow 14",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "id": "d68fe152-2c6c-4dc0-9216-312496405d48",
+      "name": "Extract Document PDF",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        1120,
+        -192
+      ],
+      "typeVersion": 1,
+      "alwaysOutputData": false,
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "url": "={{ $json['file url'] }}",
+        "options": {}
+      },
+      "id": "a044de50-4e0b-4ada-9a80-76904924750d",
+      "name": "Download File",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        896,
+        -192
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "83274f6f-c73e-4d5e-946f-c6dfdf7ed1c4",
+              "name": "json_parsed",
+              "type": "object",
+              "value": "={{ $json.output }}"
+            }
+          ]
+        },
+        "options": {
+          "ignoreConversionErrors": true
+        }
+      },
+      "id": "5e1d21a4-9d1d-4241-ab85-513258e12f3d",
+      "name": "Parsed JSON",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        1696,
+        -192
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=/** \n * Candidate Resume Evaluation Prompt\n * Style: React-inspired modular instructions\n */\n\n<SystemRole>\nYou are an expert technical recruiter with 10+ years of experience, specializing in critically evaluating resumes against job descriptions. \nYou pay attention to gaps, skill mismatches, and overstatements. \nYou return results in strict JSON format according to the provided schema. \nDo not add extra fields or commentary outside the schema.\n</SystemRole>\n\n<Props>\nresumeContent = { {{ $json[\"text\"] }} } // Extracted PDF text\njobDescription = { {{ $json[\"job_description\"] }} } // Job role details\n</Props>\n\n<AnalysisSteps>\n1. Parse `resumeContent` for skills, experience, job history, certifications, and achievements.\n2. Parse `jobDescription` for required skills, responsibilities, and qualifications.\n3. Compare candidate’s qualifications with the job requirements.\n4. Identify:\n   - Matching strengths\n   - Gaps or missing skills\n   - Any red flags (job-hopping, irrelevant experience, skill inflation)\n</AnalysisSteps>\n\n<OutputFormat>\nReturn a JSON object strictly matching this schema:\n{\n  \"percentage\": Integer (overall suitability in %),\n  \"summary\": String (1–3 sentences in simple language summarizing match),\n  \"reasons-suit\": Array of { name: String, text: String } explaining strengths,\n  \"reasons-notsuit\": Array of { name: String, text: String } explaining weaknesses\n}\n</OutputFormat>\n\n<Constraints>\n- Use only information provided in `resumeContent` and `jobDescription`.\n- Be objective and avoid guessing unknown details.\n- Ensure the JSON is valid and strictly follows the schema.\n</Constraints>\n\n<Goal>\nHelp a recruiter quickly decide if the candidate is worth interviewing.\n</Goal>\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        -192
+      ],
+      "id": "9d72a67a-fbc7-4f06-94a2-9a81d144573a",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1416,
+        32
+      ],
+      "id": "d42cb1bf-295d-4b29-9355-98524999b9a5",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "wPS03lt870VJw3xm",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "23ec014@drngpit.ac.in",
+        "subject": "CV analysis of the candidates",
+        "emailType": "text",
+        "message": "={{ $json.json_parsed }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1920,
+        -192
+      ],
+      "id": "e8f9e9a0-7da3-4ca4-96b4-a161054ad5fd",
+      "name": "Send a message",
+      "webhookId": "3efce20e-a6d9-4946-a04e-6d99ace1377a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gAfQdmkDxlPIQd7A",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -72
+      ],
+      "id": "1832bcf4-334a-4df0-86fb-4feb10939713",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "queryString": ".pdf",
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "1P8QEsTDn1EYkOtMRKZm-xG8wnfhv2epN",
+            "mode": "list",
+            "cachedResultName": "resume",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1P8QEsTDn1EYkOtMRKZm-xG8wnfhv2epN"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        224,
+        -72
+      ],
+      "id": "57da5867-6150-478c-9738-be53ddbd571d",
+      "name": "Search files and folders",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "PgUThpfIy6el3LJN",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        448,
+        -144
+      ],
+      "id": "380b80da-85f6-4c46-acf4-915e0ead27e3",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me",
+      "typeVersion": 1,
+      "position": [
+        672,
+        24
+      ],
+      "id": "984b33a6-2809-498a-a9bf-04041e745eab"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fc13e00a-832f-4bb4-9f4e-f3c369086695",
+              "name": "file url",
+              "value": "=https://drive.google.com/uc?export=download&id={{ $json[\"id\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        -192
+      ],
+      "id": "17cbf94e-8b3a-4f37-80b0-7ef0057cdd9b",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Extract Document PDF": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download File": {
+      "main": [
+        [
+          {
+            "node": "Extract Document PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parsed JSON": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Parsed JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Download File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2892d410-5393-40bd-8130-ad99d49f6518",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "13a4842eb3f96aacf17816c5b2aa35ce518af25ca7d29b9ac3042e0752f2cd75"
+  },
+  "id": "huJhivp4pEhDtqAU",
+  "tags": []
+}
