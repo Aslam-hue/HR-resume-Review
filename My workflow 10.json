@@ -1,0 +1,235 @@
+{
+  "name": "My workflow 10",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "id": "0d470a86-9aaa-48eb-aa68-604e41c3479f",
+      "name": "Extract Document PDF",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        544,
+        -480
+      ],
+      "typeVersion": 1,
+      "alwaysOutputData": false,
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.file_url }}",
+        "options": {}
+      },
+      "id": "52ad21cd-44c7-4e38-b77d-2b013f327d8b",
+      "name": "Download File",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        320,
+        -480
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {},
+      "id": "003dbba4-4301-4281-bfc8-82f6d1edc2d5",
+      "name": "When clicking ‘Test workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        -128,
+        -480
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "**Add direct link to CV and Job description**",
+        "height": 80,
+        "width": 187.37066290133808
+      },
+      "id": "cebcc7ee-766e-4081-be9e-880158cd4319",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        -608
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "**Replace OpenAI connection**",
+        "height": 80,
+        "width": 187.37066290133808
+      },
+      "id": "8e23fea6-390b-4465-878e-4688a80aa887",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        576,
+        -640
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  model: \"gpt-4o-mini\",\n  messages: [\n    {\n      role: \"system\",\n      content: JSON.stringify(JSON.parse($('Set Variables').item.json.json_schema))\n    },\n    {\n      role: \"user\",\n      content: $json.text\n    }\n  ],\n  response_format: {\n    type: \"json_schema\",\n    json_schema: $('Set Variables').item.json.json_schema\n  }\n}\n",
+        "options": {}
+      },
+      "id": "ec0f8bce-e65f-4ea1-89ea-88f39fbba7eb",
+      "name": "OpenAI - Analyze CV",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        768,
+        -480
+      ],
+      "typeVersion": 4.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "wPS03lt870VJw3xm",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "83274f6f-c73e-4d5e-946f-c6dfdf7ed1c4",
+              "name": "file_url",
+              "type": "string",
+              "value": "https://drive.google.com/uc?export=download&id=14IrxcjHd7lNhjFKz2dscxc6X00x_RWjL"
+            },
+            {
+              "id": "6e44f3e5-a0df-4337-9f7e-7cfa91b3cc37",
+              "name": "job_description",
+              "type": "string",
+              "value": "As an SEO Specialist, you will be responsible for developing and implementing strategies to improve website rankings, increase organic traffic, and boost conversion rates. You will collaborate with content creators, developers, and marketing teams to ensure SEO best practices are implemented across all digital platforms.Conduct keyword research to identify growth opportunities.  Optimize website content, landing pages, and blog posts for search engines.  Develop and execute link-building strategies.  Monitor website performance using tools such as Google Analytics, Google Search Console, and SEMrush/Ahrefs.  Stay updated with the latest SEO trends, algorithm updates, and best practices.  Collaborate with content writers and designers to create SEO-friendly content.  Conduct technical SEO audits and coordinate with developers to fix issues.  Track, report, and analyze website analytics and campaign performance."
+            },
+            {
+              "id": "c597c502-9a3c-48e6-a5f5-8a2a8be7282c",
+              "name": "prompt",
+              "type": "string",
+              "value": "You are the recruiter in recruiting agency, you are strict and you pay extra attention on details in a resume. You work with companies and find talents for their jobs. You asses any resume really attentively and critically. If the candidate is a jumper, you notice that and say us. You need to say if the candidate from out base is suitable for this job. Return 4 things: 1. Percentage (10% step) of matching candidate resume with job. 2. Short summary - should use simple language and be short. Provide final decision on candidate based on matching percentage and candidate skills vs job requirements. 3. Summary why this candidate suits this jobs. 4. Summary why this candidate doesn't suit this jobs."
+            },
+            {
+              "id": "1884eed1-9111-4ce1-8d07-ed176611f2d8",
+              "name": "json_schema",
+              "type": "string",
+              "value": "{ \"name\": \"candidate_evaluation\", \"description\": \"Structured data for evaluating a candidate based on experience and fit\", \"strict\": true, \"schema\": { \"type\": \"object\", \"properties\": { \"percentage\": { \"type\": \"integer\", \"description\": \"Overall suitability percentage score for the candidate\" }, \"summary\": { \"type\": \"string\", \"description\": \"A brief summary of the candidate's experience, personality, and any notable strengths or concerns\" }, \"reasons-suit\": { \"type\": \"array\", \"items\": { \"type\": \"object\", \"properties\": { \"name\": { \"type\": \"string\", \"description\": \"Title of the strength or reason for suitability\" }, \"text\": { \"type\": \"string\", \"description\": \"Description of how this experience or skill matches the job requirements\" } }, \"required\": [\"name\", \"text\"], \"additionalProperties\": false }, \"description\": \"List of reasons why the candidate is suitable for the position\" }, \"reasons-notsuit\": { \"type\": \"array\", \"items\": { \"type\": \"object\", \"properties\": { \"name\": { \"type\": \"string\", \"description\": \"Title of the concern or reason for unsuitability\" }, \"text\": { \"type\": \"string\", \"description\": \"Description of how this factor may not align with the job requirements\" } }, \"required\": [\"name\", \"text\"], \"additionalProperties\": false }, \"description\": \"List of reasons why the candidate may not be suitable for the position\" } }, \"required\": [\"percentage\", \"summary\", \"reasons-suit\", \"reasons-notsuit\"], \"additionalProperties\": false } }"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4df526f5-d9fd-484c-9fbd-83ae552b8b1e",
+      "name": "Set Variables",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        96,
+        -480
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "83274f6f-c73e-4d5e-946f-c6dfdf7ed1c4",
+              "name": "json_parsed",
+              "type": "object",
+              "value": "={{ JSON.parse($json.choices[0].message.content) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "865a5d89-7624-4258-8f9f-0cba84000970",
+      "name": "Parsed JSON",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        992,
+        -480
+      ],
+      "typeVersion": 3.4
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Download File": {
+      "main": [
+        [
+          {
+            "node": "Extract Document PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Variables": {
+      "main": [
+        [
+          {
+            "node": "Download File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI - Analyze CV": {
+      "main": [
+        [
+          {
+            "node": "Parsed JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Document PDF": {
+      "main": [
+        [
+          {
+            "node": "OpenAI - Analyze CV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Set Variables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "8f747494-0f02-4292-b142-38caef9d01d8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "13a4842eb3f96aacf17816c5b2aa35ce518af25ca7d29b9ac3042e0752f2cd75"
+  },
+  "id": "oUL5HWp8ZUpqDns3",
+  "tags": []
+}
